@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Для тебе ❤️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-glow: rgba(244, 63, 94, 0.6);
+            --secondary-glow: rgba(217, 70, 239, 0.4);
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: radial-gradient(circle at 50% 25%, #3b0a26 0%, #1a0514 55%, #090209 100%);
+            color: #fff1f2;
+            overflow: hidden;
+            height: 100dvh;
+            width: 100vw;
+            position: relative;
+        }
+
+        .font-romantic {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Heartbeat & Glow Animations */
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            14% { transform: scale(1.09); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.06); }
+            70% { transform: scale(1); }
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.85); opacity: 0.7; }
+            100% { transform: scale(1.75); opacity: 0; }
+        }
+
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .heart-wrapper {
+            animation: float-slow 4s ease-in-out infinite;
+        }
+
+        .beating-heart {
+            animation: heartbeat 2.2s infinite ease-in-out;
+            filter: drop-shadow(0 0 25px rgba(244, 63, 94, 0.75)) drop-shadow(0 0 50px rgba(225, 29, 72, 0.4));
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+            cursor: pointer;
+        }
+
+        .beating-heart:active {
+            transform: scale(0.86) !important;
+        }
+
+        .heart-pop {
+            animation: pop-burst 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        }
+
+        @keyframes pop-burst {
+            0% { transform: scale(0.85); }
+            50% { transform: scale(1.22); filter: drop-shadow(0 0 40px rgba(251, 113, 133, 1)) drop-shadow(0 0 70px rgba(244, 63, 94, 0.8)); }
+            100% { transform: scale(1); }
+        }
+
+        .ring-1 {
+            animation: pulse-ring 2.6s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        .ring-2 {
+            animation: pulse-ring 2.6s cubic-bezier(0.215, 0.61, 0.355, 1) infinite 1.3s;
+        }
+
+        /* Text Fade Transition */
+        .text-fade-enter {
+            opacity: 0;
+            transform: translateY(10px) scale(0.98);
+            transition: opacity 0.45s ease-out, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .text-fade-enter-active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* Ambient Orbs */
+        .ambient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Custom Scrollbar for Modal */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(244, 63, 94, 0.4);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between items-center p-4 sm:p-6 select-none">
+
+    <!-- Background Ambient Glowing Orbs -->
+    <div class="ambient-orb w-72 h-72 bg-rose-600/25 top-[-5%] left-[-10%]"></div>
+    <div class="ambient-orb w-80 h-80 bg-fuchsia-600/20 bottom-[-10%] right-[-10%]"></div>
+    <div class="ambient-orb w-60 h-60 bg-pink-500/15 top-[35%] left-[20%]"></div>
+
+    <!-- Interactive Particle Canvas -->
+    <canvas id="particleCanvas" class="fixed inset-0 pointer-events-none z-10"></canvas>
+
+    <!-- Top Navigation Bar -->
+    <header class="w-full max-w-md flex justify-between items-center z-20 pt-1">
+        <div class="flex items-center space-x-2 px-3.5 py-1.5 rounded-full glass-card">
+            <span class="w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
+            <span id="recipientBadge" class="text-xs font-medium tracking-wider text-rose-100/90 uppercase">Для найріднішої ✨</span>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <!-- Sound Toggle Button -->
+            <button id="soundBtn" onclick="toggleSound()" aria-label="Звук" class="p-2.5 rounded-full glass-card text-rose-200/80 hover:text-white active:scale-90 transition-all">
+                <svg id="soundOnIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                </svg>
+                <svg id="soundOffIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+                </svg>
+            </button>
+
+            <!-- Customize / Settings Button -->
+            <button id="settingsBtn" onclick="openSettings()" aria-label="Налаштування" class="p-2.5 rounded-full glass-card text-rose-200/80 hover:text-white active:scale-90 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Centerpiece Area -->
+    <main class="w-full max-w-md flex-1 flex flex-col justify-evenly items-center z-20 my-auto py-2">
+        
+        <!-- Interactive 3D-like Glowing Heart -->
+        <div class="relative flex flex-col items-center justify-center my-2">
+            <!-- Expanding Pulse Rings -->
+            <div class="ring-1 absolute w-40 h-40 rounded-full border border-rose-400/35 pointer-events-none"></div>
+            <div class="ring-2 absolute w-40 h-40 rounded-full border border-pink-400/25 pointer-events-none"></div>
+            <div class="absolute w-48 h-48 rounded-full bg-rose-500/15 blur-2xl pointer-events-none"></div>
+
+            <!-- Heart Wrapper -->
+            <div class="heart-wrapper relative z-10 p-4" onclick="handleHeartClick(event)">
+                <svg id="mainHeart" class="beating-heart w-40 h-40 sm:w-44 sm:h-44 overflow-visible" viewBox="0 0 200 200">
+                    <defs>
+                        <!-- Rich 3D Radial Gradient -->
+                        <radialGradient id="heart3DGrad" cx="35%" cy="28%" r="70%" fx="30%" fy="25%">
+                            <stop offset="0%" stop-color="#ffe4e6" />
+                            <stop offset="18%" stop-color="#fb7185" />
+                            <stop offset="55%" stop-color="#e11d48" />
+                            <stop offset="88%" stop-color="#9f1239" />
+                            <stop offset="100%" stop-color="#4c0519" />
+                        </radialGradient>
+
+                        <!-- Glossy Specular Highlight -->
+                        <linearGradient id="glossGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.65)" />
+                            <stop offset="50%" stop-color="rgba(255,255,255,0.08)" />
+                            <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+                        </linearGradient>
+
+                        <!-- Rim Light Gradient -->
+                        <linearGradient id="rimLight" x1="0%" y1="100%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#f43f5e" />
+                            <stop offset="100%" stop-color="#fda4af" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Base Heart Path -->
+                    <path d="M100 176 C100 176 22 124 22 68 C22 36 47 16 74 16 C91 16 100 27 100 37 C100 27 109 16 126 16 C153 16 178 36 178 68 C178 124 100 176 100 176 Z" 
+                          fill="url(#heart3DGrad)" 
+                          stroke="url(#rimLight)" 
+                          stroke-width="1.5" />
+
+                    <!-- Left Upper 3D Gloss Reflection -->
+                    <path d="M40 64 C40 44 56 30 74 30 C83 30 89 34 93 40 C83 37 64 41 52 57 C45 66 43 77 43 82 C40 77 40 70 40 64 Z" 
+                          fill="url(#glossGrad)" />
+
+                    <!-- Right Subtle Highlight -->
+                    <ellipse cx="145" cy="48" rx="12" ry="6" transform="rotate(28 145 48)" fill="rgba(255,255,255,0.22)" />
+                </svg>
+            </div>
+
+            <!-- Tap Prompt Subtitle -->
+            <p id="tapPrompt" class="mt-2 text-xs sm:text-sm font-medium tracking-widest uppercase text-rose-200/80 animate-pulse flex items-center gap-1.5">
+                <span>Натисни на сердечко</span>
+                <span class="text-rose-400">✨</span>
+            </p>
+        </div>
+
+        <!-- Glassmorphism Message Card -->
+        <div id="messageCard" class="w-full glass-card rounded-3xl p-6 sm:p-7 text-center relative overflow-hidden transition-all duration-500 min-h-[210px] flex flex-col justify-between items-center">
+            <!-- Top Subtle Decorative Glow Inside Card -->
+            <div class="w-16 h-0.5 bg-gradient-to-r from-transparent via-rose-400/60 to-transparent mb-3"></div>
+
+            <!-- Message Content Container -->
+            <div id="cardContent" class="my-auto w-full text-fade-enter text-fade-enter-active">
+                <h1 id="messageTitle" class="font-romantic italic text-3xl sm:text-4xl font-semibold text-rose-100 mb-3 tracking-wide drop-shadow">
+                    Привіт, моє сонечко...
+                </h1>
+                <p id="messageBody" class="text-sm sm:text-base text-rose-100/90 font-light leading-relaxed px-1">
+                    Я створив цю маленьку сторінку спеціально для тебе. Торкнися сердечка вище — у кожному його ударі заховане те, що я дуже хочу тобі сказати.
+                </p>
+            </div>
+
+            <!-- Final Decision Buttons (Hidden until the last step) -->
+            <div id="actionButtons" class="hidden w-full flex-col sm:flex-row items-center justify-center gap-3 mt-5 z-20">
+                <button id="yesBtn" onclick="acceptApology()" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white font-semibold text-sm tracking-wide shadow-[0_0_25px_rgba(244,63,94,0.6)] hover:shadow-[0_0_35px_rgba(244,63,94,0.9)] active:scale-95 transition-all">
+                    Так, пробачаю ❤️
+                </button>
+                <button id="thinkBtn" onclick="playfulEvade(event)" class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white/10 border border-white/15 text-rose-200 font-medium text-xs hover:bg-white/15 active:scale-95 transition-all">
+                    Ще подумаю... 🤔
+                </button>
+            </div>
+
+            <!-- Replay Button (Shown after celebration) -->
+            <button id="replayBtn" onclick="resetExperience()" class="hidden mt-5 px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-rose-300/30 text-xs text-rose-200 tracking-wider uppercase transition-all">
+                Пройти ще раз ↻
+            </button>
+
+            <!-- Progress Dots Indicator -->
+            <div id="progressDots" class="flex items-center justify-center space-x-2 mt-5 pt-1">
+                <!-- Dynamically generated dots -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center z-20 pb-1">
+        <p class="text-[11px] text-rose-300/40 font-light tracking-widest">
+            ЗРОБЛЕНО З БЕЗМЕЖНОЮ ЛЮБОВ'Ю ❤️
+        </p>
+    </footer>
+
+    <!-- Customization Modal (For Sender) -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-md rounded-3xl p-6 border border-rose-400/30 max-h-[90dvh] flex flex-col justify-between text-left shadow-2xl">
+            <div class="flex justify-between items-center border-b border-white/10 pb-3 mb-4">
+                <div>
+                    <h2 class="font-romantic text-2xl font-semibold text-rose-200">Налаштування сторінки ✨</h2>
+                    <p class="text-xs text-rose-200/60">Впиши ім'я коханої та відредагуй слова</p>
+                </div>
+                <button onclick="closeSettings()" class="p-2 rounded-full bg-white/5 hover:bg-white/15 text-rose-200">
+                    ✕
+                </button>
+            </div>
+
+            <div class="overflow-y-auto pr-1 space-y-4 flex-1">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-rose-300 mb-1.5 font-medium">Ім'я або ніжне звертання:</label>
+                    <input id="inputName" type="text" placeholder="Наприклад: Аліночко / Кохана / Моя квіточко" 
+                           class="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-rose-200/40 text-sm focus:outline-none focus:border-rose-400">
+                </div>
+
+                <div id="customStagesContainer" class="space-y-3">
+                    <!-- Dynamic textareas for each stage -->
+                </div>
+            </div>
+
+            <!-- Modal Actions -->
+            <div class="pt-4 mt-4 border-t border-white/10 flex flex-col gap-2.5">
+                <div class="flex gap-2">
+                    <button onclick="saveCustomSettings()" class="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs uppercase tracking-wider transition-all shadow-lg">
+                        Зберегти зміни
+                    </button>
+                    <button onclick="copyShareLink()" class="flex-1 py-3 rounded-xl bg-fuchsia-600/80 hover:bg-fuchsia-500 text-white font-medium text-xs uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-1.5">
+                        <span>Скопіювати посилання</span>
+                        <span>🔗</span>
+                    </button>
+                </div>
+                <p id="copyFeedback" class="text-[11px] text-center text-emerald-300 hidden">
+                    Посилання скопійовано! Надішли його їй у Telegram або Instagram ❤️
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**************************************************************
+         * 1. STATE & ROMANTIC MESSAGES DATA (IN UKRAINIAN)
+         **************************************************************/
+        let girlfriendName = "моє сонечко";
+        let currentStep = 0; // 0 is intro, 1..6 are stages, 7 is accepted
+        let soundEnabled = true;
+        let audioInitialized = false;
+        let evadeCount = 0;
+
+        const defaultStages = [
+            {
+                title: "Пробач мені, {name}...",
+                text: "Мені зараз так сумно через те, що між нами виникло непорозуміння. Моє серце не на місці, коли ти засмучена через мене."
+            },
+            {
+                title: "Я все усвідомив 💭",
+                text: "Я був неправий і визнаю свою провину. Іноді я кажу або роблю дурниці, але запевняю тебе — я ніколи не хотів зробити тобі боляче."
+            },
+            {
+                title: "Твоя усмішка — мій всесвіт ✨",
+                text: "Найбільше у світі я люблю бачити твої щасливі очі. Кожна хвилина без твого тепла та ніжності здається мені цілою вічністю."
+            },
+            {
+                title: "Ти — найцінніше, що в мене є 🌹",
+                text: "Жодна суперечка чи гордість не варті навіть однієї твоєї сльозинки. Ти робиш моє життя світлим, теплим і по-справжньому щасливим."
+            },
+            {
+                title: "Обіцяю берегти тебе 🤍",
+                text: "Я обіцяю бути уважнішим, чути тебе серцем, цінувати кожну нашу мить і міцно-міцно обіймати тебе щодня."
+            },
+            {
+                title: "Ти мені пробачиш, {name}? 🥺",
+                text: "Давай залишимо всі образи позаду. Я так сильно тебе кохаю і дуже хочу просто пригорнути тебе до себе прямо зараз..."
+            }
+        ];
+
+        let stages = JSON.parse(JSON.stringify(defaultStages));
+
+        const playfulCompliments = [
+            "Ну будь ласка, кицю 🥺❤️",
+            "Обіцяю багато цьомчиків та обіймів! 🫂✨",
+            "Без тебе мій світ чорно-білий... 🌸",
+            "Я куплю тобі твої улюблені смаколики! 🍫🍓",
+            "Твоє сердечко вже каже «Так» 🥰",
+            "Здавайся, я все одно тебе дуже кохаю! ❤️"
+        ];
+
+        /**************************************************************
+         * 2. URL PARAMETERS & INITIALIZATION
+         **************************************************************/
+        function loadFromUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('name')) {
+                const nameParam = params.get('name').trim();
+                if (nameParam) girlfriendName = nameParam;
+            }
+            for (let i = 0; i < stages.length; i++) {
+                if (params.has(`m${i}`)) {
+                    stages[i].text = params.get(`m${i}`);
+                }
+            }
+            updateHeaderAndIntro();
+        }
+
+        function updateHeaderAndIntro() {
+            const badge = document.getElementById('recipientBadge');
+            badge.textContent = `Для тебе, ${girlfriendName} ✨`;
+
+            if (currentStep === 0) {
+                document.getElementById('messageTitle').textContent = `Привіт, ${girlfriendName}...`;
+            }
+        }
+
+        function renderProgressDots() {
+            const container = document.getElementById('progressDots');
+            container.innerHTML = '';
+            for (let i = 1; i <= stages.length; i++) {
+                const dot = document.createElement('div');
+                const isActive = i === currentStep;
+                const isCompleted = i < currentStep;
+
+                dot.className = `transition-all duration-300 rounded-full ${
+                    isActive 
+                        ? 'w-6 h-2 bg-rose-400 shadow-[0_0_10px_rgba(251,113,133,0.9)]' 
+                        : isCompleted 
+                            ? 'w-2 h-2 bg-rose-400/70' 
+                            : 'w-2 h-2 bg-white/20'
+                }`;
+                container.appendChild(dot);
+            }
+        }
+
+        /**************************************************************
+         * 3. WEB AUDIO SYNTHESIS (GENTLE ROMANTIC CHIMES via TONE.JS)
+         **************************************************************/
+        let synth = null;
+
+        async function initAudio() {
+            if (audioInitialized || typeof Tone === 'undefined') return;
+            try {
+                await Tone.start();
+                synth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "sine" },
+                    envelope: {
+                        attack: 0.04,
+                        decay: 0.3,
+                        sustain: 0.2,
+                        release: 1.4
+                    }
+                }).toDestination();
+                synth.volume.value = -12;
+                audioInitialized = true;
+            } catch (e) {
+                console.warn("Audio init skipped:", e);
+            }
+        }
+
+        function playRomanticNote(stepIndex) {
+            if (!soundEnabled || !synth) return;
+            try {
+                const chordProgression = [
+                    ["F4", "A4", "C5"],
+                    ["G4", "B4", "D5"],
+                    ["A4", "C5", "E5"],
+                    ["F4", "A4", "E5"],
+                    ["D4", "F4", "A4", "C5"],
+                    ["G4", "B4", "D5", "F5"]
+                ];
+                const notes = chordProgression[(stepIndex - 1) % chordProgression.length];
+                synth.triggerAttackRelease(notes, "8n");
+            } catch (e) {}
+        }
+
+        function playCelebrationChord() {
+            if (!soundEnabled || !synth) return;
+            try {
+                const now = Tone.now();
+                synth.triggerAttackRelease(["C4", "E4", "G4", "B4"], "8n", now);
+                synth.triggerAttackRelease(["E4", "G4", "B4", "D5"], "8n", now + 0.18);
+                synth.triggerAttackRelease(["G4", "B4", "D5", "G5"], "2n", now + 0.36);
+            } catch (e) {}
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundOnIcon').classList.toggle('hidden', !soundEnabled);
+            document.getElementById('soundOffIcon').classList.toggle('hidden', soundEnabled);
+        }
+
+        /**************************************************************
+         * 4. HEART INTERACTION & PROGRESSIVE REVEAL
+         **************************************************************/
+        async function handleHeartClick(event) {
+            await initAudio();
+
+            // Trigger Haptic Vibration on Mobile if available
+            if (navigator.vibrate) {
+                navigator.vibrate(35);
+            }
+
+            // Heart Visual Pop
+            const heartSvg = document.getElementById('mainHeart');
+            heartSvg.classList.remove('heart-pop');
+            void heartSvg.offsetWidth; // trigger reflow
+            heartSvg.classList.add('heart-pop');
+
+            // Spawn Burst of Floating Hearts & Sparkles at click coordinates
+            const rect = heartSvg.getBoundingClientRect();
+            const clickX = event ? (event.clientX || rect.left + rect.width / 2) : rect.left + rect.width / 2;
+            const clickY = event ? (event.clientY || rect.top + rect.height / 2) : rect.top + rect.height / 2;
+            createHeartBurst(clickX, clickY, 18);
+
+            // If already completed, just shower hearts and chime
+            if (currentStep > stages.length) {
+                playCelebrationChord();
+                return;
+            }
+
+            // Advance Step
+            if (currentStep < stages.length) {
+                currentStep++;
+                playRomanticNote(currentStep);
+                updateCardView();
+            } else if (currentStep === stages.length) {
+                // Already on final question, pulse the Yes button gently
+                playRomanticNote(currentStep);
+                const yesBtn = document.getElementById('yesBtn');
+                yesBtn.classList.add('scale-105');
+                setTimeout(() => yesBtn.classList.remove('scale-105'), 250);
+            }
+        }
+
+        function updateCardView() {
+            const cardContent = document.getElementById('cardContent');
+            const titleEl = document.getElementById('messageTitle');
+            const bodyEl = document.getElementById('messageBody');
+            const promptEl = document.getElementById('tapPrompt');
+            const actionButtons = document.getElementById('actionButtons');
+
+            // Smooth fade-out
+            cardContent.classList.remove('text-fade-enter-active');
+
+            setTimeout(() => {
+                const stageData = stages[currentStep - 1];
+                const formattedTitle = stageData.title.replace(/\{name\}/g, girlfriendName);
+                const formattedText = stageData.text.replace(/\{name\}/g, girlfriendName);
+
+                titleEl.textContent = formattedTitle;
+                bodyEl.textContent = formattedText;
+
+                // Update prompt text & buttons based on step
+                if (currentStep < stages.length) {
+                    promptEl.innerHTML = `<span>Натисни ще раз (${currentStep}/${stages.length})</span> <span class="text-rose-400">💓</span>`;
+                    actionButtons.classList.add('hidden');
+                    actionButtons.classList.remove('flex');
+                } else {
+                    promptEl.innerHTML = `<span>Моє серце б'ється лише для тебе</span> <span class="text-rose-400">❤️</span>`;
+                    actionButtons.classList.remove('hidden');
+                    actionButtons.classList.add('flex');
+                }
+
+                renderProgressDots();
+
+                // Smooth fade-in
+                cardContent.classList.add('text-fade-enter-active');
+            }, 220);
+        }
+
+        function playfulEvade(event) {
+            if (event) event.stopPropagation();
+            if (navigator.vibrate) navigator.vibrate(20);
+
+            const thinkBtn = document.getElementById('thinkBtn');
+            const yesBtn = document.getElementById('yesBtn');
+            const bodyEl = document.getElementById('messageBody');
+
+            // Show sweet playful compliment in message body
+            const compliment = playfulCompliments[evadeCount % playfulCompliments.length];
+            bodyEl.innerHTML = `<span class="text-rose-300 font-medium">${compliment}</span>`;
+
+            // Grow the "Yes" button slightly to make it even more inviting
+            const scaleVal = Math.min(1 + (evadeCount + 1) * 0.06, 1.28);
+            yesBtn.style.transform = `scale(${scaleVal})`;
+
+            // Change "Think" button text or dodge slightly
+            const buttonTexts = [
+                "Точно подумаєш? 🥺",
+                "Ну коханаа... ❤️",
+                "Не натискай сюди 🙈",
+                "Тисни «Так» 👉❤️",
+                "Я дуже стараюсь! 🌹"
+            ];
+            thinkBtn.textContent = buttonTexts[evadeCount % buttonTexts.length];
+
+            const randomX = (Math.random() - 0.5) * 40;
+            const randomY = (Math.random() - 0.5) * 16;
+            thinkBtn.style.transform = `translate(${randomX}px, ${randomY}px) scale(0.92)`;
+
+            evadeCount++;
+        }
+
+        function acceptApology() {
+            currentStep = stages.length + 1;
+            if (navigator.vibrate) navigator.vibrate([50, 40, 80]);
+            playCelebrationChord();
+
+            const cardContent = document.getElementById('cardContent');
+            const titleEl = document.getElementById('messageTitle');
+            const bodyEl = document.getElementById('messageBody');
+            const actionButtons = document.getElementById('actionButtons');
+            const replayBtn = document.getElementById('replayBtn');
+            const promptEl = document.getElementById('tapPrompt');
+            const progressDots = document.getElementById('progressDots');
+
+            // Launch massive celebration burst
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            createHeartBurst(centerX, centerY - 60, 45);
+            setTimeout(() => createHeartBurst(centerX - 80, centerY, 25), 250);
+            setTimeout(() => createHeartBurst(centerX + 80, centerY, 25), 450);
+
+            cardContent.classList.remove('text-fade-enter-active');
+
+            setTimeout(() => {
+                titleEl.textContent = `Дякую тобі, ${girlfriendName}! ❤️`;
+                bodyEl.innerHTML = `Ти зробила мене найщасливішим у світі! Я безмежно тебе кохаю, ціную і вже біжу міцно-міцно тебе обіймати та цілувати! 🥰✨🌹`;
+
+                actionButtons.classList.add('hidden');
+                actionButtons.classList.remove('flex');
+                progressDots.classList.add('hidden');
+                replayBtn.classList.remove('hidden');
+
+                promptEl.innerHTML = `<span>Я тебе кохаю!</span> <span class="text-rose-400">♾️❤️</span>`;
+                cardContent.classList.add('text-fade-enter-active');
+            }, 220);
+        }
+
+        function resetExperience() {
+            currentStep = 0;
+            evadeCount = 0;
+
+            const yesBtn = document.getElementById('yesBtn');
+            const thinkBtn = document.getElementById('thinkBtn');
+            yesBtn.style.transform = 'scale(1)';
+            thinkBtn.style.transform = 'translate(0, 0) scale(1)';
+            thinkBtn.textContent = "Ще подумаю... 🤔";
+
+            document.getElementById('replayBtn').classList.add('hidden');
+            document.getElementById('progressDots').classList.remove('hidden');
+            document.getElementById('actionButtons').classList.add('hidden');
+            document.getElementById('actionButtons').classList.remove('flex');
+
+            document.getElementById('messageTitle').textContent = `Привіт, ${girlfriendName}...`;
+            document.getElementById('messageBody').textContent = `Я створив цю маленьку сторінку спеціально для тебе. Торкнися сердечка вище — у кожному його ударі заховане те, що я дуже хочу тобі сказати.`;
+            document.getElementById('tapPrompt').innerHTML = `<span>Натисни на сердечко</span> <span class="text-rose-400">✨</span>`;
+
+            renderProgressDots();
+        }
+
+        /**************************************************************
+         * 5. CUSTOMIZATION MODAL & SHAREABLE LINK GENERATOR
+         **************************************************************/
+        function openSettings() {
+            const modal = document.getElementById('settingsModal');
+            const inputName = document.getElementById('inputName');
+            const container = document.getElementById('customStagesContainer');
+            document.getElementById('copyFeedback').classList.add('hidden');
+
+            inputName.value = girlfriendName;
+            container.innerHTML = '';
+
+            stages.forEach((stage, idx) => {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = `
+                    <label class="block text-[11px] uppercase tracking-wider text-rose-300/80 mb-1">
+                        Крок ${idx + 1}: ${stage.title.replace(/\{name\}/g, girlfriendName)}
+                    </label>
+                    <textarea id="stageInput_${idx}" rows="2" 
+                        class="w-full px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 text-white text-xs leading-relaxed focus:outline-none focus:border-rose-400">${stage.text}</textarea>
+                `;
+                container.appendChild(wrapper);
+            });
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function applyFormValues() {
+            const nameVal = document.getElementById('inputName').value.trim();
+            if (nameVal) {
+                girlfriendName = nameVal;
+            }
+            stages.forEach((stage, idx) => {
+                const textarea = document.getElementById(`stageInput_${idx}`);
+                if (textarea && textarea.value.trim()) {
+                    stage.text = textarea.value.trim();
+                }
+            });
+            updateHeaderAndIntro();
+            if (currentStep > 0 && currentStep <= stages.length) {
+                updateCardView();
+            }
+        }
+
+        function saveCustomSettings() {
+            applyFormValues();
+            closeSettings();
+        }
+
+        function copyShareLink() {
+            applyFormValues();
+            const url = new URL(window.location.href.split('?')[0]);
+            url.searchParams.set('name', girlfriendName);
+
+            stages.forEach((stage, idx) => {
+                if (stage.text !== defaultStages[idx].text) {
+                    url.searchParams.set(`m${idx}`, stage.text);
+                }
+            });
+
+            const shareUrl = url.toString();
+
+            // Copy using fallback-friendly method for iframe compatibility
+            const tempInput = document.createElement('textarea');
+            tempInput.value = shareUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            const feedback = document.getElementById('copyFeedback');
+            feedback.classList.remove('hidden');
+        }
+
+        /**************************************************************
+         * 6. HTML5 CANVAS FLOATING PETALS & BURST HEARTS ENGINE
+         **************************************************************/
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let ambientParticles = [];
+        let burstParticles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class AmbientParticle {
+            constructor() {
+                this.reset(true);
+            }
+
+            reset(initial = false) {
+                this.x = Math.random() * canvas.width;
+                this.y = initial ? Math.random() * canvas.height : canvas.height + 20;
+                this.size = Math.random() * 8 + 4;
+                this.speedY = -(Math.random() * 0.55 + 0.2);
+                this.speedX = (Math.random() - 0.5) * 0.4;
+                this.opacity = Math.random() * 0.45 + 0.1;
+                this.angle = Math.random() * Math.PI * 2;
+                this.spin = (Math.random() - 0.5) * 0.015;
+                this.isHeart = Math.random() > 0.35;
+                this.color = ['#fb7185', '#f43f5e', '#fda4af', '#f472b6'][Math.floor(Math.random() * 4)];
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX + Math.sin(this.y * 0.012) * 0.25;
+                this.angle += this.spin;
+
+                if (this.y < -25) {
+                    this.reset(false);
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.color;
+
+                if (this.isHeart) {
+                    drawMiniHeart(ctx, 0, 0, this.size);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.size / 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        class BurstHeart {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = Math.random() * 5.5 + 1.8;
+                this.vx = Math.cos(angle) * velocity;
+                this.vy = Math.sin(angle) * velocity - 1.8;
+                this.gravity = 0.08;
+                this.size = Math.random() * 12 + 7;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.014 + 0.01;
+                this.rotation = (Math.random() - 0.5) * 0.8;
+                this.color = ['#ff1e56', '#fb7185', '#fda4af', '#ffe4e6', '#e879f9'][Math.floor(Math.random() * 5)];
+            }
+
+            update() {
+                this.vx *= 0.98;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                if (this.alpha <= 0) return;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 8;
+                drawMiniHeart(ctx, 0, 0, this.size);
+                ctx.restore();
+            }
+        }
+
+        function drawMiniHeart(context, x, y, size) {
+            context.beginPath();
+            const topCurveHeight = size * 0.3;
+            context.moveTo(x, y + topCurveHeight);
+            // top left curve
+            context.bezierCurveTo(
+                x, y, 
+                x - size / 2, y, 
+                x - size / 2, y + topCurveHeight
+            );
+            // bottom left curve
+            context.bezierCurveTo(
+                x - size / 2, y + (size + topCurveHeight) / 2, 
+                x, y + (size + topCurveHeight) / 1.4, 
+                x, y + size
+            );
+            // bottom right curve
+            context.bezierCurveTo(
+                x, y + (size + topCurveHeight) / 1.4, 
+                x + size / 2, y + (size + topCurveHeight) / 2, 
+                x + size / 2, y + topCurveHeight
+            );
+            // top right curve
+            context.bezierCurveTo(
+                x + size / 2, y, 
+                x, y, 
+                x, y + topCurveHeight
+            );
+            context.closePath();
+            context.fill();
+        }
+
+        function createHeartBurst(x, y, count = 16) {
+            for (let i = 0; i < count; i++) {
+                burstParticles.push(new BurstHeart(x, y));
+            }
+        }
+
+        function initParticles() {
+            ambientParticles = [];
+            for (let i = 0; i < 28; i++) {
+                ambientParticles.push(new AmbientParticle());
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < ambientParticles.length; i++) {
+                ambientParticles[i].update();
+                ambientParticles[i].draw();
+            }
+
+            for (let i = burstParticles.length - 1; i >= 0; i--) {
+                burstParticles[i].update();
+                burstParticles[i].draw();
+                if (burstParticles[i].alpha <= 0) {
+                    burstParticles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animateCanvas);
+        }
+
+        window.onload = function () {
+            loadFromUrlParams();
+            renderProgressDots();
+            initParticles();
+            animateCanvas();
+        };
+    </script>
+</body>
+</html>
